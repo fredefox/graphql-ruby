@@ -166,4 +166,47 @@ describe GraphQL::Schema do
       assert_includes res["data"]["__schema"]["types"].map { |t| t["name"] }, "Subscription"
     end
   end
+
+  describe 'GraphQL::Schema.execute' do
+    it 'arguments are propagated when using fragments' do
+      query = <<~GRAPHQL
+        fragment T on R {
+          y
+        }
+
+
+        query f($x: Int) {
+          g(x: $x) {
+            ...T
+          }
+        }
+      GRAPHQL
+
+      variables = {
+        x: 1337
+      }
+
+      class R < ::GraphQL::Schema::Object
+        field :y, Int, null: false
+      end
+
+      class A < ::GraphQL::Schema::Object
+        field :g, R, null: false do
+          argument :x, Int, required: false
+        end
+
+        def g(x:)
+          puts(x)
+          { y: x }
+        end
+      end
+
+      class S < ::GraphQL::Schema
+        query A
+      end
+
+      res = S.execute(query, variables: variables)
+      assert_equal(res.to_h.dig('data', 'g'), { 'y' => 1337 })
+    end
+  end
 end
