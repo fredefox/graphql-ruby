@@ -174,7 +174,6 @@ describe GraphQL::Schema do
           y
         }
 
-
         query f($x: Int) {
           g(x: $x) {
             ...T
@@ -191,13 +190,13 @@ describe GraphQL::Schema do
       end
 
       class A < ::GraphQL::Schema::Object
-        field :g, R, null: false do
+        field :g, R.connection_type, null: false do
           argument :x, Int, required: false
         end
 
         def g(x:)
           puts(x)
-          { y: x }
+          [{ y: x }]
         end
       end
 
